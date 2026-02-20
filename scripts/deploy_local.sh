@@ -27,21 +27,22 @@ echo "[4/6] Restart service"
 sudo systemctl restart cicd-demo
 
 echo "[5/6] Health check (wait up to 20s)"
+ok=0
 for i in {1..20}; do
   if curl -fsS http://127.0.0.1:5000/health >/dev/null; then
+    ok=1
     echo "Health OK"
     break
   fi
   sleep 1
 done
 
-if ! curl -fsS http://127.0.0.1:5000/health >/dev/null; then
+if [ "${ok}" -ne 1 ]; then
   echo "Health check failed. Showing service status + logs:"
   sudo systemctl status cicd-demo --no-pager -l || true
   sudo journalctl -u cicd-demo -n 120 --no-pager || true
   exit 1
 fi
-
 
 echo "[6/6] Deployment complete"
 
